@@ -11,9 +11,9 @@ The goal isn't to make the next JGraphT — it's to genuinely learn how the algo
 ## Rules I'm following for this project
 
 - No external graph libraries (no JGraphT, no shortcuts) — everything is built by hand
-- No copying code from tutorials/AI — I write it myself, even if it takes longer
 - Interfaces first, implementations second, so algorithms don't care whether the graph is stored as a list or a matrix underneath
-
+- No copying from tutorials or repos — I only use official documentation to understand concepts, then write the logic myself
+- 
 ## Project structure
 
 ```
