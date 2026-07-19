@@ -1,262 +1,257 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GraphLab — work in progress</title>
-<meta name="description" content="A graph theory engine built from scratch, node by node. Currently under construction." />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GraphLab — work in progress</title>
+  <meta name="description" content="A graph theory engine built from scratch, node by node. Currently under construction." />
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 
-<style>
-  :root {
-    --paper: #F4F7FB;
-    --grid-line: #D6E1EE;
-    --ink: #1C2B45;
-    --graphite: #57616E;
-    --pen: #C2273D;
-    --highlighter: #FFE066;
-    --paper-edge: #DCE3EC;
-  }
-
-  * { box-sizing: border-box; }
-
-  html, body { margin: 0; padding: 0; }
-
-  body {
-    background-color: var(--paper);
-    background-image:
-      linear-gradient(var(--grid-line) 1px, transparent 1px),
-      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size: 28px 28px;
-    background-position: -1px -1px;
-    color: var(--ink);
-    font-family: 'Space Mono', monospace;
-    min-height: 100vh;
-    overflow-x: hidden;
-    position: relative;
-  }
-
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 64px;
-    width: 1px;
-    background: rgba(194, 39, 61, 0.16);
-    z-index: 0;
-  }
-
-  .wrap {
-    position: relative;
-    z-index: 1;
-    max-width: 920px;
-    margin: 0 auto;
-    padding: 56px 28px 80px 96px;
-  }
-
-  @media (max-width: 680px) {
-    .wrap { padding: 40px 20px 64px 40px; }
-    body::before { left: 24px; }
-  }
-
-  @media (max-width: 400px) {
-    .wrap { padding: 32px 16px 56px 32px; }
-    body::before { left: 18px; }
-  }
-
-  header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .brand {
-    font-family: 'Kalam', cursive;
-    font-weight: 700;
-    font-size: 22px;
-    color: var(--ink);
-    text-decoration: none;
-  }
-
-  .brand span { color: var(--pen); }
-
-  .stamp {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--pen);
-    border: 2px solid var(--pen);
-    border-radius: 4px;
-    padding: 6px 10px;
-    transform: rotate(-6deg);
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  .hero { margin-top: 56px; }
-
-  .eyebrow {
-    font-size: 13px;
-    color: var(--graphite);
-    letter-spacing: 0.04em;
-    margin-bottom: 10px;
-  }
-
-  h1 {
-    font-family: 'Kalam', cursive;
-    font-weight: 700;
-    font-size: clamp(36px, 9vw, 76px);
-    line-height: 1.08;
-    margin: 0 0 18px 0;
-  }
-
-  h1 .underline { position: relative; }
-
-  h1 .underline svg {
-    position: absolute;
-    left: -4px;
-    right: -4px;
-    bottom: -10px;
-    width: calc(100% + 8px);
-    height: 14px;
-  }
-
-  .sub {
-    font-size: 16px;
-    line-height: 1.7;
-    color: var(--graphite);
-    max-width: 480px;
-    margin-bottom: 8px;
-  }
-
-  .sub strong { color: var(--ink); }
-
-  .todo { margin-top: 28px; font-size: 14px; color: var(--graphite); }
-
-  .todo-title {
-    font-family: 'Kalam', cursive;
-    font-size: 18px;
-    color: var(--ink);
-    margin-bottom: 8px;
-    display: inline-block;
-  }
-
-  .todo ul { list-style: none; margin: 0; padding: 0; }
-
-  .todo li { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
-
-  .box {
-    width: 15px;
-    height: 15px;
-    border: 2px solid var(--ink);
-    border-radius: 3px;
-    flex-shrink: 0;
-    position: relative;
-  }
-
-  .box.checked { background: var(--highlighter); border-color: var(--ink); }
-
-  .box.checked::after {
-    content: "";
-    position: absolute;
-    left: 2px;
-    top: -2px;
-    width: 8px;
-    height: 12px;
-    border-right: 2px solid var(--ink);
-    border-bottom: 2px solid var(--ink);
-    transform: rotate(35deg);
-  }
-
-  .todo li.done span {
-    text-decoration: line-through;
-    text-decoration-color: var(--pen);
-    color: #9aa2ab;
-  }
-
-  .graph-stage { margin-top: 48px; position: relative; }
-
-  .graph-stage svg { width: 100%; height: auto; display: block; overflow: visible; }
-
-  .graph-mobile { display: none; }
-
-  @media (max-width: 680px) {
-    .graph-desktop { display: none; }
-    .graph-mobile { display: block; }
-  }
-
-  .edge {
-    fill: none;
-    stroke: var(--ink);
-    stroke-width: 2.2;
-    stroke-linecap: round;
-    stroke-dasharray: 400;
-    stroke-dashoffset: 400;
-    animation: draw 1.1s ease forwards;
-  }
-
-  .edge.pen { stroke: var(--pen); }
-
-  .node { opacity: 0; animation: nodeFade 0.35s ease forwards; }
-
-  .node circle { fill: var(--paper); stroke: var(--ink); stroke-width: 2.2; }
-
-  .node.filled circle { fill: var(--highlighter); }
-
-  .node text {
-    font-family: 'Kalam', cursive;
-    font-size: 14px;
-    fill: var(--ink);
-    text-anchor: middle;
-    dominant-baseline: central;
-  }
-
-  .graph-mobile .node text { font-size: 15px; }
-
-  .traveler { fill: var(--pen); }
-
-  @keyframes draw { to { stroke-dashoffset: 0; } }
-  @keyframes nodeFade { to { opacity: 1; } }
-
-  .caption {
-    text-align: center;
-    font-size: 12px;
-    color: var(--graphite);
-    margin-top: 4px;
-    font-style: italic;
-  }
-
-  footer {
-    margin-top: 64px;
-    padding-top: 20px;
-    border-top: 1px dashed var(--paper-edge);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-    font-size: 13px;
-    color: var(--graphite);
-  }
-
-  footer a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--pen); }
-  footer a:hover { color: var(--pen); }
-
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.001ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.001ms !important;
+  <style>
+    :root {
+      --paper: #F4F7FB;
+      --grid-line: #D6E1EE;
+      --ink: #1C2B45;
+      --graphite: #57616E;
+      --pen: #C2273D;
+      --highlighter: #FFE066;
+      --paper-edge: #DCE3EC;
     }
-  }
-</style>
+
+    * { box-sizing: border-box; }
+
+    html, body { margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--paper);
+      background-image:
+              linear-gradient(var(--grid-line) 1px, transparent 1px),
+              linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size: 28px 28px;
+      background-position: -1px -1px;
+      color: var(--ink);
+      font-family: 'Space Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 64px;
+      width: 1px;
+      background: rgba(194, 39, 61, 0.16);
+      z-index: 0;
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 56px 28px 80px 96px;
+    }
+
+    @media (max-width: 680px) {
+      .wrap { padding: 40px 20px 64px 40px; }
+      body::before { left: 24px; }
+    }
+
+    @media (max-width: 400px) {
+      .wrap { padding: 32px 16px 56px 32px; }
+      body::before { left: 18px; }
+    }
+
+    header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .brand {
+      font-family: 'Kalam', cursive;
+      font-weight: 700;
+      font-size: 22px;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .brand span { color: var(--pen); }
+
+    .stamp {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--pen);
+      border: 2px solid var(--pen);
+      border-radius: 4px;
+      padding: 6px 10px;
+      transform: rotate(-6deg);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .hero { margin-top: 56px; }
+
+    .eyebrow {
+      font-size: 13px;
+      color: var(--graphite);
+      letter-spacing: 0.04em;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-family: 'Kalam', cursive;
+      font-weight: 700;
+      font-size: clamp(36px, 9vw, 76px);
+      line-height: 1.08;
+      margin: 0 0 18px 0;
+    }
+
+    h1 .highlight {
+      background: linear-gradient(to top, var(--highlighter) 40%, transparent 40%);
+      padding: 0 4px;
+      margin: 0 -4px;
+    }
+
+    .sub {
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--graphite);
+      max-width: 480px;
+      margin-bottom: 8px;
+    }
+
+    .sub strong { color: var(--ink); }
+
+    .todo { margin-top: 28px; font-size: 14px; color: var(--graphite); }
+
+    .todo-title {
+      font-family: 'Kalam', cursive;
+      font-size: 18px;
+      color: var(--ink);
+      margin-bottom: 8px;
+      display: inline-block;
+    }
+
+    .todo ul { list-style: none; margin: 0; padding: 0; }
+
+    .todo li { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
+
+    .box {
+      width: 15px;
+      height: 15px;
+      border: 2px solid var(--ink);
+      border-radius: 3px;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .box.checked { background: var(--highlighter); border-color: var(--ink); }
+
+    .box.checked::after {
+      content: "";
+      position: absolute;
+      left: 2px;
+      top: -2px;
+      width: 8px;
+      height: 12px;
+      border-right: 2px solid var(--ink);
+      border-bottom: 2px solid var(--ink);
+      transform: rotate(35deg);
+    }
+
+    .todo li.done span {
+      text-decoration: line-through;
+      text-decoration-color: var(--pen);
+      color: #9aa2ab;
+    }
+
+    .graph-stage { margin-top: 48px; position: relative; }
+
+    .graph-stage svg { width: 100%; height: auto; display: block; overflow: visible; }
+
+    .graph-mobile { display: none; }
+
+    @media (max-width: 680px) {
+      .graph-desktop { display: none; }
+      .graph-mobile { display: block; }
+    }
+
+    .edge {
+      fill: none;
+      stroke: var(--ink);
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-dasharray: 400;
+      stroke-dashoffset: 400;
+      animation: draw 1.1s ease forwards;
+    }
+
+    .edge.pen { stroke: var(--pen); }
+
+    .node { opacity: 0; animation: nodeFade 0.35s ease forwards; }
+
+    .node circle { fill: var(--paper); stroke: var(--ink); stroke-width: 2.2; }
+
+    .node.filled circle { fill: var(--highlighter); }
+
+    .node text {
+      font-family: 'Kalam', cursive;
+      font-size: 14px;
+      fill: var(--ink);
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+
+    .graph-mobile .node text { font-size: 15px; }
+
+    .traveler { fill: var(--pen); }
+
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+    @keyframes nodeFade { to { opacity: 1; } }
+
+    .caption {
+      text-align: center;
+      font-size: 12px;
+      color: var(--graphite);
+      margin-top: 4px;
+      font-style: italic;
+    }
+
+    footer {
+      margin-top: 64px;
+      padding-top: 20px;
+      border-top: 1px dashed var(--paper-edge);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--graphite);
+    }
+
+    footer a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--pen); }
+    footer a:hover { color: var(--pen); }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+    }
+  </style>
 </head>
 <body>
 
@@ -271,13 +266,8 @@
     <div class="eyebrow">currently being built, one commit at a time</div>
 
     <h1>
-      <span class="underline">
-        a graph engine
-        <svg viewBox="0 0 300 14" preserveAspectRatio="none">
-          <path d="M2,8 Q40,2 80,9 T160,7 T240,10 T298,6" stroke="var(--highlighter)" stroke-width="7" fill="none" stroke-linecap="round" opacity="0.8"/>
-        </svg>
-      </span><br/>
-      built by hand.
+      a graph engine<br/>
+      built <span class="highlight">by hand</span>.
     </h1>
 
     <p class="sub">
@@ -319,7 +309,7 @@
 
       <circle class="traveler" r="6">
         <animateMotion dur="3.2s" repeatCount="indefinite" begin="1.6s"
-          path="M 260,205 C 330,240 400,235 460,190 C 510,175 550,165 590,150" />
+                       path="M 260,205 C 330,240 400,235 460,190 C 510,175 550,165 590,150" />
       </circle>
     </svg>
 
@@ -340,7 +330,7 @@
 
       <circle class="traveler" r="6">
         <animateMotion dur="3.2s" repeatCount="indefinite" begin="1.6s"
-          path="M 110,220 C 150,250 190,255 200,300 C 190,330 170,350 150,370" />
+                       path="M 110,220 C 150,250 190,255 200,300 C 190,330 170,350 150,370" />
       </circle>
     </svg>
 
