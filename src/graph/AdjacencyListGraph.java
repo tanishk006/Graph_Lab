@@ -22,22 +22,22 @@ class AdjacencyListGraph implements Graph {
 
     }
 
-   public ArrayList<Integer> getNeighbours(int vertex){
-        ArrayList<Edge> edges = adglist.get(vertex);
+
+    public ArrayList<Integer> getNeighbours(int vertex) {
         ArrayList<Integer> result = new ArrayList<>();
+        ArrayList<Edge> edges = adglist.get(vertex);
 
         for(Edge e : edges){
-        result.add(e.vertice);
+            result.add(e.vertice);
         }
+
         return result;
-   }
+    }
 
-   public int getVertexCount(){
+
+    public int getVertexCount() {
         return adglist.size();
-   }
-
-
-
+    }
 }
 
 
