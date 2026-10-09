@@ -79,7 +79,6 @@
     }
 
     p.hint {
-      padding: 6;
       color: var(--gray);
       font-size: 13px;
       line-height: 1.6;
@@ -385,7 +384,6 @@
 <body>
   <div class="wrap">
     <h1>Graph<b>Lab</b> playground</h1>
-    
     <p class="hint">Click empty paper to drop a node, or switch on Erase node and click one to remove it (its edges go
       with it). Drag from node to node to draw an edge. Click a node to set the start, shift-click to set the target. In
       weighted mode a box pops up on every new edge so you can type its own weight (negative is fine, Esc cancels the
@@ -472,7 +470,7 @@
         if (V.comp) g.setAttribute('style', `--h:${(V.comp[i] * 67) % 360}`);
         el('circle', { r: 23 }, g); el('text', {}, g).textContent = nm(i);
         if (i === start) el('text', { class: 'tag', y: -33 }, g).textContent = 'start';
-        if (i === target) el('text', { class: 'tag', y: i === start ? -45 : -33 }, g).textContent = 'target';
+        if (i === target) el('text', { class: 'tag', y: i === start ? -50 : -33 }, g).textContent = 'target';
         g.addEventListener('pointerdown', ev => {
           ev.stopPropagation(); ev.preventDefault(); if (running) return; if (erase) { delNode(i); return }
           drag = { from: i, moved: false, shift: ev.shiftKey, line: el('line', { class: 'ghost', x1: n.x, y1: n.y, x2: n.x, y2: n.y }) }
@@ -601,10 +599,13 @@
             const pn = R.pn || pathNodes(R.par || {}, target);
             for (let i = 0; i + 1 < pn.length; i++)path.push(findEdge(pn[i], pn[i + 1]));
             if (!done.length) done = pn;
-            label = pn.length ? `Path: ${pn.map(nm).join(' > ')}` : `${nm(target)} can't be reached from ${nm(start)}.`
+            const walk = (kind === 'bfs' || kind === 'dfs') ? `Visit order: ${last.done.map(nm).join(' ')} (as numbers: ${last.done.join(' ')}). ` : '';
+            label = walk + (start === target ? (walk ? '' : `Start and target are both ${nm(start)}, so there is no path to draw.`) : pn.length ? `Path: ${pn.map(nm).join(' > ')}` : `${nm(target)} can't be reached from ${nm(start)}.`)
           }
         }
-        view = { ...last, cur: null, hot: null, fr: [], done, path, label }; render()
+        const trav = kind === 'bfs' || kind === 'dfs';
+        if (trav) $('ft').textContent = 'Visit order';
+        view = { ...last, cur: null, hot: null, fr: [], done, path, label, notes: trav ? last.done.map(nm) : last.notes }; render()
       }
       running = false;
     }
