@@ -1,342 +1,229 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GraphLab — work in progress</title>
-  <meta name="description" content="A graph theory engine built from scratch, node by node. Currently under construction." />
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-
-  <style>
-    :root {
-      --paper: #F4F7FB;
-      --grid-line: #D6E1EE;
-      --ink: #1C2B45;
-      --graphite: #57616E;
-      --pen: #C2273D;
-      --highlighter: #FFE066;
-      --paper-edge: #DCE3EC;
-    }
-
-    * { box-sizing: border-box; }
-
-    html, body { margin: 0; padding: 0; }
-
-    body {
-      background-color: var(--paper);
-      background-image:
-              linear-gradient(var(--grid-line) 1px, transparent 1px),
-              linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-      background-size: 28px 28px;
-      background-position: -1px -1px;
-      color: var(--ink);
-      font-family: 'Space Mono', monospace;
-      min-height: 100vh;
-      overflow-x: hidden;
-      position: relative;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0;
-      bottom: 0;
-      left: 64px;
-      width: 1px;
-      background: rgba(194, 39, 61, 0.16);
-      z-index: 0;
-    }
-
-    /*
-      Content hugs the notebook margin line (body::before, fixed at
-      left:64px) instead of floating centered in the viewport. That's
-      what a real ruled notebook page looks like: text starts right
-      after the margin and the page just runs wide to the right — it
-      doesn't get boxed and centered with even gutters on both sides.
-    */
-    .page {
-      position: relative;
-      z-index: 1;
-      width: 100%;
-    }
-
-    .wrap {
-      max-width: 760px;
-      margin: 0;
-      padding: 56px 28px 80px 96px;
-    }
-
-    @media (min-width: 1100px) {
-      .wrap { padding-top: 72px; }
-    }
-
-    @media (max-width: 680px) {
-      .wrap { padding: 40px 20px 64px 40px; }
-      body::before { left: 24px; }
-    }
-
-    @media (max-width: 400px) {
-      .wrap { padding: 32px 16px 56px 32px; }
-      body::before { left: 18px; }
-    }
-
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .brand {
-      font-family: 'Kalam', cursive;
-      font-weight: 700;
-      font-size: 34px;
-      letter-spacing: 0.01em;
-      color: var(--ink);
-      text-decoration: none;
-      line-height: 1;
-    }
-
-    .brand span { color: var(--pen); }
-
-    .stamp {
-      font-family: 'Space Mono', monospace;
-      font-size: 11px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--pen);
-      border: 2px solid var(--pen);
-      border-radius: 4px;
-      padding: 6px 10px;
-      transform: rotate(-6deg);
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
-    .hero { margin-top: 56px; }
-
-    .eyebrow {
-      font-size: 13px;
-      color: var(--graphite);
-      letter-spacing: 0.04em;
-      margin-bottom: 10px;
-    }
-
-    h1 {
-      font-family: 'Kalam', cursive;
-      font-weight: 700;
-      font-size: clamp(36px, 6vw, 64px);
-      line-height: 1.08;
-      margin: 0 0 18px 0;
-    }
-
-    h1 .highlight {
-      background: linear-gradient(to top, var(--highlighter) 40%, transparent 40%);
-      padding: 0 4px;
-      margin: 0 -4px;
-    }
-
-    .sub {
-      font-size: 16px;
-      line-height: 1.7;
-      color: var(--graphite);
-      max-width: 480px;
-      margin-bottom: 8px;
-    }
-
-    .sub strong { color: var(--ink); }
-
-    .todo { margin-top: 28px; font-size: 14px; color: var(--graphite); }
-
-    .todo-title {
-      font-family: 'Kalam', cursive;
-      font-size: 18px;
-      color: var(--ink);
-      margin-bottom: 8px;
-      display: inline-block;
-    }
-
-    .todo ul { list-style: none; margin: 0; padding: 0; }
-
-    .todo li { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
-
-    .box {
-      width: 15px;
-      height: 15px;
-      border: 2px solid var(--ink);
-      border-radius: 3px;
-      flex-shrink: 0;
-      position: relative;
-    }
-
-    .box.checked { background: var(--highlighter); border-color: var(--ink); }
-
-    .box.checked::after {
-      content: "";
-      position: absolute;
-      left: 2px;
-      top: -2px;
-      width: 8px;
-      height: 12px;
-      border-right: 2px solid var(--ink);
-      border-bottom: 2px solid var(--ink);
-      transform: rotate(35deg);
-    }
-
-    .todo li.done span {
-      text-decoration: line-through;
-      text-decoration-color: var(--pen);
-      color: #9aa2ab;
-    }
-
-    /*
-      The graph used to be full-bleed (width:100%) inside .wrap, so on a
-      wide laptop it scaled up to ~800px and towered over the 480px-wide
-      paragraph text above it. Capping it near that same reading width
-      keeps the doodle in proportion with everything else on the page.
-    */
-    .graph-stage {
-      margin-top: 48px;
-      max-width: 620px;
-      position: relative;
-    }
-
-    .graph-stage svg { width: 100%; height: auto; display: block; overflow: visible; }
-
-    @media (max-width: 680px) {
-      .graph-stage { max-width: 360px; margin-left: auto; margin-right: auto; }
-    }
-
-    .edge {
-      fill: none;
-      stroke: var(--ink);
-      stroke-width: 2.2;
-      stroke-linecap: round;
-      stroke-dasharray: 400;
-      stroke-dashoffset: 400;
-      animation: draw 1.1s ease forwards;
-    }
-
-    .edge.pen { stroke: var(--pen); }
-
-    .node { opacity: 0; animation: nodeFade 0.35s ease forwards; }
-
-    .node circle { fill: var(--paper); stroke: var(--ink); stroke-width: 2.2; }
-
-    .node.filled circle { fill: var(--highlighter); }
-
-    .node text {
-      font-family: 'Kalam', cursive;
-      font-size: 14px;
-      fill: var(--ink);
-      text-anchor: middle;
-      dominant-baseline: central;
-    }
-
-    .traveler { fill: var(--pen); }
-
-    @keyframes draw { to { stroke-dashoffset: 0; } }
-    @keyframes nodeFade { to { opacity: 1; } }
-
-    footer {
-      margin-top: 64px;
-      padding-top: 20px;
-      border-top: 1px dashed var(--paper-edge);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-      font-size: 13px;
-      color: var(--graphite);
-    }
-
-    footer a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--pen); }
-    footer a:hover { color: var(--pen); }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.001ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.001ms !important;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GraphLab — playground</title>
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#F4F7FB;--grid:#D6E1EE;--ink:#1C2B45;--gray:#57616E;--pen:#C2273D;--hi:#FFE066;--note:#FFF3A8;--cl:78%;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root[data-theme="dark"]{--paper:#141B2B;--grid:#222C42;--ink:#E8EEF8;--gray:#9AA6BA;--pen:#FF6B81;--hi:#8A7410;--note:#5E5420;--cl:38%}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px;color:var(--ink);font-family:'Space Mono',monospace;min-height:100vh}
+.wrap{max-width:980px;padding:28px 20px 56px 56px;position:relative}
+.wrap::before{content:"";position:absolute;left:30px;top:0;bottom:0;width:1px;background:rgba(194,39,61,.3)}
+h1{font-family:Kalam,cursive;font-size:clamp(30px,5vw,48px);margin:0 0 4px;line-height:1.1}
+h1 b{color:var(--pen)}
+p.hint{color:var(--gray);font-size:13px;line-height:1.6;max-width:680px;margin:0 0 14px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+button{font:700 13px 'Space Mono',monospace;color:var(--ink);background:var(--paper);border:2px solid var(--ink);border-radius:4px;padding:7px 11px;cursor:pointer}
+button:hover{background:var(--hi)}button:focus-visible,svg:focus-visible,input:focus-visible{outline:3px solid var(--pen);outline-offset:2px}
+button.go{border-color:var(--pen);color:var(--pen)}button.go:hover{color:var(--ink)}
+label{font-size:12px;color:var(--gray);display:flex;gap:6px;align-items:center}
+input[type=number]{width:64px;font:700 13px 'Space Mono',monospace;background:var(--paper);color:var(--ink);border:2px solid var(--ink);border-radius:4px;padding:4px 6px}
+.stage{position:relative;border:2px solid var(--ink);border-radius:6px;background:color-mix(in srgb,var(--paper) 78%,transparent);touch-action:none}
+svg{width:100%;height:auto;display:block;user-select:none}
+.wpop{position:absolute;transform:translateX(-50%);display:flex;gap:6px;align-items:center;background:var(--paper);border:2px solid var(--pen);border-radius:6px;padding:6px 8px;box-shadow:3px 4px 0 rgba(0,0,0,.2);z-index:5}
+.wpop[hidden]{display:none}
+button.on{background:var(--pen);color:#fff;border-color:var(--pen)}
+.stage.erase{border-color:var(--pen)}.erase .n{cursor:crosshair}.erase .n:hover circle{fill:var(--note);stroke:var(--pen)}
+.e{stroke:var(--ink);stroke-width:2.2;stroke-linecap:round;fill:none}
+.e.x{stroke:var(--gray);stroke-dasharray:4 5;opacity:.7}
+.e.t{stroke:var(--pen);stroke-width:3.4;stroke-dasharray:none;opacity:1}.e.p{stroke:var(--pen);stroke-width:6}
+.e.h{stroke:var(--pen);stroke-width:4;stroke-dasharray:2 5;opacity:1}
+.ah{fill:var(--ink)}.ahr{fill:var(--pen)}
+.w{cursor:pointer}.w circle{fill:var(--paper);stroke:var(--ink);stroke-width:1.5}
+.w text{font:700 12px 'Space Mono',monospace;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+.n{cursor:grab}.n circle{fill:var(--paper);stroke:var(--ink);stroke-width:2.4;transition:fill .25s}
+.n text{font:700 18px Kalam,cursive;fill:var(--ink);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.n.done circle{fill:var(--hi)}.n.fr circle{stroke:var(--pen);stroke-dasharray:5 4;stroke-width:3.2}
+.n.cc circle{fill:hsl(var(--h) 75% var(--cl))}
+.n.cur circle{fill:var(--pen);stroke:var(--pen)}.n.cur text{fill:#fff}.n.s circle{stroke-width:4}
+.tag{font:700 11px 'Space Mono',monospace;fill:var(--pen);text-anchor:middle;pointer-events:none}
+.ghost{stroke:var(--pen);stroke-width:2;stroke-dasharray:6 5;pointer-events:none}
+.panel{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
+@media(min-width:760px){.panel{grid-template-columns:1fr 1fr}}
+.box{border:2px dashed var(--gray);border-radius:6px;padding:10px 12px;min-height:84px}
+.box h2{font:700 18px Kalam,cursive;margin:0 0 6px}
+.notes{display:flex;flex-wrap:wrap;gap:8px}
+.note{background:var(--note);color:var(--ink);font:700 15px Kalam,cursive;padding:4px 10px;border-radius:2px;box-shadow:2px 3px 0 rgba(0,0,0,.22);transform:rotate(var(--r,0deg));animation:pop .25s ease}
+@keyframes pop{from{transform:scale(.5) rotate(var(--r,0deg));opacity:0}}
+#log{font-size:12.5px;color:var(--gray);line-height:1.6;margin:0}.empty{color:var(--gray);font-size:12px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
 </head>
 <body>
-
-<div class="page">
-  <div class="wrap">
-
-    <header>
-      <a href="#" class="brand">Graph<span>Lab</span></a>
-      <div class="stamp">work in progress</div>
-    </header>
-
-    <div class="hero">
-      <div class="eyebrow">currently being built, one commit at a time</div>
-
-      <h1>
-        a graph engine<br/>
-        built <span class="highlight">by hand</span>.
-      </h1>
-
-      <p class="sub">
-        No JGraphT, no shortcuts. Every node, edge, and traversal in this project is written from scratch in Java &mdash; <strong>BFS, DFS, Dijkstra</strong>, and whatever else breaks my brain along the way.
-      </p>
-      <p class="sub">
-        This page will turn into a live visualizer once the algorithms are done. For now, here's the doodle version.
-      </p>
-
-      <div class="todo">
-        <span class="todo-title">the actual to-do list &rarr;</span>
-        <ul>
-          <li class="done"><span class="box checked"></span><span>Graph interface + Edge class</span></li>
-          <li class="done"><span class="box checked"></span><span>Adjacency list implementation</span></li>
-          <li class="done"><span class="box checked"></span><span>Adjacency matrix implementation</span></li>
-          <li><span class="box"></span><span>BFS &amp; DFS</span></li>
-          <li><span class="box"></span><span>Dijkstra's shortest path</span></li>
-          <li><span class="box"></span><span>the actual live visualizer</span></li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="graph-stage">
-
-      <svg class="graph-desktop" viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand drawn graph sketch of six connected nodes">
-        <path class="edge" style="animation-delay:0.1s"  d="M 90,150 C 150,90 220,95 270,150" />
-        <path class="edge" style="animation-delay:0.3s"  d="M 270,150 C 330,190 380,200 430,150" />
-        <path class="edge" style="animation-delay:0.5s"  d="M 90,150 C 130,220 200,235 260,205" />
-        <path class="edge pen" style="animation-delay:0.7s" d="M 260,205 C 330,240 400,235 460,190" />
-        <path class="edge" style="animation-delay:0.9s"  d="M 430,150 C 480,110 540,105 590,150" />
-        <path class="edge" style="animation-delay:1.1s"  d="M 460,190 C 510,175 550,165 590,150" />
-
-        <g class="node" style="animation-delay:0.05s" transform="translate(90,150)"><circle r="22"/><text>A</text></g>
-        <g class="node" style="animation-delay:0.35s" transform="translate(270,150)"><circle r="22"/><text>B</text></g>
-        <g class="node filled" style="animation-delay:0.55s" transform="translate(260,205)"><circle r="22"/><text>C</text></g>
-        <g class="node" style="animation-delay:0.85s" transform="translate(430,150)"><circle r="22"/><text>D</text></g>
-        <g class="node" style="animation-delay:1.05s" transform="translate(460,190)"><circle r="22"/><text>E</text></g>
-        <g class="node filled" style="animation-delay:1.25s" transform="translate(590,150)"><circle r="22"/><text>F</text></g>
-
-        <circle class="traveler" r="6">
-          <animateMotion dur="3.2s" repeatCount="indefinite" begin="1.6s"
-                         path="M 260,205 C 330,240 400,235 460,190 C 510,175 550,165 590,150" />
-        </circle>
-      </svg>
-
-    </div>
-
-    <footer>
-      <span>built during a semester break, fueled by curiosity about Dijkstra vs A*</span>
-      <a href="https://github.com/tanishk006/Graph_Lab" target="_blank" rel="noopener">source on GitHub</a>
-    </footer>
-
+<div class="wrap">
+  <h1>Graph<b>Lab</b> playground</h1>
+  <p class="hint">Click empty paper to drop a node, or switch on Erase node and click one to remove it (its edges go with it). Drag from node to node to draw an edge. Click a node to set the start, shift-click to set the target. In weighted mode a box pops up on every new edge so you can type its own weight (negative is fine, Esc cancels the edge). Click a weight bubble to edit it, shift-click to delete the edge.</p>
+  <div class="bar" id="algs" role="group" aria-label="Algorithms"></div>
+  <div class="bar">
+    <label><input type="checkbox" id="wt" checked> weighted</label>
+    <label><input type="checkbox" id="dir"> directed</label>
+    <label>pen speed <input id="spd" type="range" min="1" max="10" value="5"></label>
+    <button id="era" aria-pressed="false">Erase node</button><button id="stop">Stop</button><button id="clr">Clear paper</button><button id="th"></button>
+  </div>
+  <div class="stage"><svg id="g" viewBox="0 0 720 400" role="application" aria-label="Graph canvas" tabindex="0"></svg>
+    <div class="wpop" id="wpop" hidden><input id="wpi" type="number" step="any" aria-label="Edge weight"><button id="wok" type="button">Set weight</button></div></div>
+  <div class="panel">
+    <div class="box"><h2 id="ft">Notes</h2><div id="fr" class="notes"><span class="empty">Pick an algorithm to see what the pen is tracking.</span></div></div>
+    <div class="box"><h2>Pen's log</h2><p id="log">Start: A. Target: F.</p></div>
   </div>
 </div>
-
+<script>
+const NS='http://www.w3.org/2000/svg',svg=document.getElementById('g'),$=id=>document.getElementById(id);
+let nodes=[{x:80,y:200},{x:250,y:110},{x:240,y:300},{x:440,y:120},{x:460,y:300},{x:630,y:200}];
+let edges=[[0,1,4],[0,2,2],[1,2,1],[1,3,5],[2,4,7],[3,4,4],[3,5,3],[4,5,2]];
+let start=0,target=5,view=null,running=false,token=0,drag=null;
+const nm=i=>String.fromCharCode(65+i),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const D=()=>$('dir').checked,WT=()=>$('wt').checked,Wt=e=>WT()?e[2]:1;
+let erase=false;
+function delNode(k){nodes.splice(k,1);
+  edges=edges.filter(e=>e[0]!==k&&e[1]!==k).map(e=>[e[0]>k?e[0]-1:e[0],e[1]>k?e[1]-1:e[1],e[2]]);
+  if(start===k)start=0;else if(start>k)start--;
+  if(target===k)target=Math.max(nodes.length-1,0);else if(target>k)target--;
+  view=null;render()}
+$('era').onclick=()=>{erase=!erase;$('era').classList.toggle('on',erase);$('era').setAttribute('aria-pressed',erase);svg.parentNode.classList.toggle('erase',erase)};
+let pend=null;
+function askWeight(i,isNew){if(running||!edges[i])return;closePop(true);
+  const g=geom(edges[i]),r=svg.getBoundingClientRect(),st=svg.parentNode.getBoundingClientRect(),s=$('wpop'),inp=$('wpi');
+  pend={i,isNew};s.hidden=false;
+  s.style.left=Math.min(Math.max(g.lx/720*r.width,90),r.width-90)+'px';
+  s.style.top=Math.min(g.ly/400*r.height+(r.top-st.top)+22,r.height-44)+'px';
+  inp.value=isNew?'':edges[i][2];inp.focus();inp.select()}
+function closePop(ok){if(!pend)return;const{i,isNew}=pend,v=parseFloat($('wpi').value);pend=null;$('wpop').hidden=true;
+  if(ok&&isFinite(v))edges[i][2]=v;else if(!ok&&isNew)edges.splice(i,1);
+  view=null;render()}
+$('wpi').addEventListener('keydown',ev=>{if(ev.key==='Enter')closePop(true);if(ev.key==='Escape')closePop(false)});
+$('wok').onclick=()=>closePop(true);
+window.addEventListener('pointerdown',ev=>{if(pend&&!ev.target.closest('#wpop'))closePop(true)},true);
+function el(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);(p||svg).appendChild(e);return e}
+function geom(e){const A=nodes[e[0]],B=nodes[e[1]],rev=D()&&edges.some(x=>x[0]===e[1]&&x[1]===e[0]);
+  const dx=B.x-A.x,dy=B.y-A.y,L=Math.hypot(dx,dy)||1,off=rev?30:0,cx=(A.x+B.x)/2-dy/L*off,cy=(A.y+B.y)/2+dx/L*off;
+  const u=(px,py,tx,ty,r)=>{const l=Math.hypot(tx-px,ty-py)||1;return[px+(tx-px)/l*r,py+(ty-py)/l*r]};
+  const s=u(A.x,A.y,cx,cy,23),t=u(B.x,B.y,cx,cy,D()?27:23);
+  return{d:`M${s[0]},${s[1]} Q${cx},${cy} ${t[0]},${t[1]}`,lx:(A.x+2*cx+B.x)/4,ly:(A.y+2*cy+B.y)/4}}
+function render(){
+  svg.innerHTML='<defs>'+['ah','ahr'].map(id=>`<marker id="${id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0L10,5L0,10z" class="${id}"/></marker>`).join('')+'</defs>';
+  const V=view||{},has=(a,i)=>a&&a.includes(i);
+  edges.forEach((e,i)=>{
+    const g=geom(e);let c='e';
+    if(has(V.rej,i))c+=' x';if(has(V.tree,i))c+=' t';if(has(V.path,i))c+=' p';if(V.hot===i)c+=' h';
+    const p=el('path',{d:g.d,class:c});if(D())p.setAttribute('marker-end',`url(#${/ [tph]/.test(c)?'ahr':'ah'})`);
+    const w=el('g',{class:'w',transform:`translate(${g.lx},${g.ly})`});
+    el('circle',{r:WT()?11:5},w);if(WT())el('text',{},w).textContent=e[2];
+    w.addEventListener('pointerdown',ev=>{ev.stopPropagation();if(running)return;if(ev.shiftKey){edges.splice(i,1);view=null;render()}else if(WT())askWeight(i,false)});
+  });
+  nodes.forEach((n,i)=>{
+    const c=['n'];if(has(V.done,i))c.push('done');if(has(V.fr,i))c.push('fr');if(V.cur===i)c.push('cur');if(V.comp)c.push('cc');if(i===start)c.push('s');
+    const g=el('g',{class:c.join(' '),transform:`translate(${n.x},${n.y})`,'data-i':i});
+    if(V.comp)g.setAttribute('style',`--h:${(V.comp[i]*67)%360}`);
+    el('circle',{r:23},g);el('text',{},g).textContent=nm(i);
+    if(i===start)el('text',{class:'tag',y:-33},g).textContent='start';
+    if(i===target)el('text',{class:'tag',y:i===start?-45:-33},g).textContent='target';
+    g.addEventListener('pointerdown',ev=>{ev.stopPropagation();ev.preventDefault();if(running)return;if(erase){delNode(i);return}
+      drag={from:i,moved:false,shift:ev.shiftKey,line:el('line',{class:'ghost',x1:n.x,y1:n.y,x2:n.x,y2:n.y})}});
+  });
+  if(V.notes){const f=$('fr');f.innerHTML='';if(!V.notes.length)f.innerHTML='<span class="empty">Nothing waiting.</span>';
+    V.notes.forEach((t,i)=>{const s=document.createElement('span');s.className='note';s.style.setProperty('--r',((i*7)%9-4)+'deg');s.textContent=t;f.appendChild(s)});
+    $('log').textContent=V.label}
+}
+function pt(ev){const p=svg.createSVGPoint();p.x=ev.clientX;p.y=ev.clientY;return p.matrixTransform(svg.getScreenCTM().inverse())}
+svg.addEventListener('pointerdown',ev=>{if(running||erase||nodes.length>=26)return;const p=pt(ev);nodes.push({x:p.x,y:p.y});view=null;render()});
+window.addEventListener('pointermove',ev=>{if(!drag)return;const p=pt(ev);drag.moved=true;drag.line.setAttribute('x2',p.x);drag.line.setAttribute('y2',p.y)});
+window.addEventListener('pointerup',ev=>{
+  if(!drag)return;const d=drag;drag=null;
+  const hit=document.elementFromPoint(ev.clientX,ev.clientY),n=hit&&hit.closest&&hit.closest('.n'),to=n?+n.getAttribute('data-i'):null;
+  if(to!==null&&to!==d.from&&d.moved){
+    if(!edges.some(e=>(e[0]===d.from&&e[1]===to)||(!D()&&e[0]===to&&e[1]===d.from))){edges.push([d.from,to,1]);if(WT())setTimeout(()=>askWeight(edges.length-1,true))}view=null}
+  else if(!d.moved||to===d.from){if(d.shift)target=d.from;else start=d.from;view=null}
+  render();
+});
+/* ---------- algorithms ---------- */
+function adj(){const A=nodes.map(()=>[]);edges.forEach((e,i)=>{A[e[0]].push({to:e[1],w:Wt(e),ei:i});if(!D())A[e[1]].push({to:e[0],w:Wt(e),ei:i})});return A}
+const mk=(cur,done,fr,tree,label,notes,x)=>({cur,done:[...done],fr:[...fr],tree,label,notes,...x});
+const treeOf=(par,done)=>[...done].filter(x=>par[x]).map(x=>par[x].ei);
+const notesD=d=>d.map((v,i)=>v<Infinity?`${nm(i)}=${v}`:null).filter(Boolean);
+const findEdge=(u,v)=>edges.findIndex(e=>(e[0]===u&&e[1]===v)||(!D()&&e[0]===v&&e[1]===u));
+function pathNodes(par,t){const p=[t];let c=t,g=0;while(c!==start&&par[c]&&g++<nodes.length){c=par[c].u;p.push(c)}return c===start&&p.length>1?p.reverse():[]}
+function uf(n){const p=[...Array(n).keys()],f=x=>p[x]===x?x:(p[x]=f(p[x]));return{f,u:(a,b)=>{a=f(a);b=f(b);if(a===b)return false;p[a]=b;return true}}}
+const comps=U=>nodes.map((_,i)=>U.f(i));
+const groups=U=>{const m={};nodes.forEach((_,i)=>(m[U.f(i)]=m[U.f(i)]||[]).push(nm(i)));return Object.values(m).map(g=>'{'+g.join('')+'}')};
+function bfs(){const A=adj(),S=[],done=new Set(),seen=new Set([start]),q=[start],par={};
+  while(q.length){const u=q.shift();done.add(u);
+    for(const{to,ei}of A[u])if(!seen.has(to)){seen.add(to);q.push(to);par[to]={u,ei}}
+    S.push(mk(u,done,q,treeOf(par,done),`Visit ${nm(u)}. Queue: ${q.map(nm).join(' ')||'empty'}`,q.map(nm)))}
+  return{S,par,title:'Queue (first in, first out)'}}
+function dfs(){const A=adj(),S=[],done=new Set(),st=[start],par={};
+  while(st.length){const u=st.pop();if(done.has(u))continue;done.add(u);
+    for(const{to,ei}of A[u].slice().reverse())if(!done.has(to)){st.push(to);par[to]={u,ei}}
+    S.push(mk(u,done,st.filter(x=>!done.has(x)),treeOf(par,done),`Dive into ${nm(u)}. Stack: ${st.map(nm).join(' ')||'empty'}`,st.map(nm)))}
+  return{S,par,title:'Stack (last in, first out)'}}
+function dij(){const A=adj(),S=[],done=new Set(),d=nodes.map(()=>Infinity),par={};d[start]=0;
+  if(edges.some(e=>Wt(e)<0))return{S:[mk(null,[],[],[],'Dijkstra breaks on negative weights. Try Bellman-Ford.',[])],par,title:'Distances',end:'Dijkstra needs non-negative weights.'};
+  while(true){let u=-1;for(let i=0;i<nodes.length;i++)if(!done.has(i)&&d[i]<Infinity&&(u<0||d[i]<d[u]))u=i;if(u<0)break;
+    done.add(u);for(const{to,w,ei}of A[u])if(!done.has(to)&&d[u]+w<d[to]){d[to]=d[u]+w;par[to]={u,ei}}
+    S.push(mk(u,done,d.map((v,i)=>v<Infinity&&!done.has(i)?i:-1).filter(i=>i>=0),treeOf(par,done),`Lock in ${nm(u)} at distance ${d[u]}.`,notesD(d)))}
+  return{S,par,title:'Distance table (best known so far)'}}
+function bf(){const S=[],d=nodes.map(()=>Infinity),par={},E=[];d[start]=0;let neg=false;
+  edges.forEach((e,i)=>{E.push([e[0],e[1],Wt(e),i]);if(!D())E.push([e[1],e[0],Wt(e),i])});
+  for(let r=1;r<=nodes.length;r++){let ch=false;
+    for(const[a,b,w,i]of E)if(d[a]+w<d[b]){d[b]=d[a]+w;par[b]={u:a,ei:i};ch=true}
+    const reach=d.map((v,i)=>v<Infinity?i:-1).filter(i=>i>=0);
+    if(r===nodes.length&&ch){neg=true;S.push(mk(null,reach,[],[],`Pass ${r} still improved things: negative cycle.`,notesD(d)));break}
+    S.push(mk(null,reach,[],treeOf(par,reach),`Pass ${r}: ${ch?'some distances improved.':'nothing changed, finished early.'}`,notesD(d)));if(!ch)break}
+  return{S,par,neg,title:'Distances after each pass'}}
+function fw(){const n=nodes.length,S=[],d=[],nx=[];
+  for(let i=0;i<n;i++){d.push(Array(n).fill(Infinity));nx.push(Array(n).fill(-1));d[i][i]=0;nx[i][i]=i}
+  edges.forEach(e=>{const w=Wt(e);if(w<d[e[0]][e[1]]){d[e[0]][e[1]]=w;nx[e[0]][e[1]]=e[1]}
+    if(!D()&&w<d[e[1]][e[0]]){d[e[1]][e[0]]=w;nx[e[1]][e[0]]=e[0]}});
+  for(let k=0;k<n;k++){for(let i=0;i<n;i++)for(let j=0;j<n;j++)if(d[i][k]+d[k][j]<d[i][j]){d[i][j]=d[i][k]+d[k][j];nx[i][j]=nx[i][k]}
+    S.push(mk(k,[],[],[],`Allow ${nm(k)} as a stop-over. Every pair is updated; showing distances from ${nm(start)}.`,notesD(d[start])))}
+  const neg=d.some((r,i)=>r[i]<0),pn=[start];let u=start,g=0;
+  while(!neg&&u!==target&&nx[u][target]>=0&&g++<n){u=nx[u][target];pn.push(u)}
+  return{S,neg,pn:u===target&&pn.length>1?pn:[],title:'Distances from start, per stop-over'}}
+function kruskal(){const S=[],U=uf(nodes.length),tree=[],rej=[];let tot=0;
+  edges.map((e,i)=>i).sort((a,b)=>Wt(edges[a])-Wt(edges[b])).forEach(i=>{const e=edges[i],ok=U.u(e[0],e[1]);
+    if(ok){tree.push(i);tot+=Wt(e)}else rej.push(i);
+    S.push(mk(null,[],[],[...tree],`${nm(e[0])}-${nm(e[1])} (${Wt(e)}): ${ok?'joins two groups, keep it.':'already connected, skip it.'}`,groups(U),{rej:[...rej],hot:i,comp:comps(U)}))});
+  return{S,end:`Minimum spanning forest: ${tree.length} edges, total weight ${tot}. Edges treated as undirected.`,title:'Groups (union-find sets)'}}
+function prim(){const S=[],inT=new Set([start]),tree=[];let tot=0;
+  while(true){let b=-1;edges.forEach((e,i)=>{if(inT.has(e[0])!==inT.has(e[1])&&(b<0||Wt(e)<Wt(edges[b])))b=i});if(b<0)break;
+    const e=edges[b],v=inT.has(e[0])?e[1]:e[0];inT.add(v);tree.push(b);tot+=Wt(e);
+    const cr=edges.map((x,i)=>i).filter(i=>inT.has(edges[i][0])!==inT.has(edges[i][1]));
+    S.push(mk(v,inT,cr.map(i=>inT.has(edges[i][0])?edges[i][1]:edges[i][0]),[...tree],`Cheapest edge leaving the tree: ${nm(e[0])}-${nm(e[1])} (${Wt(e)}). Add ${nm(v)}.`,cr.map(i=>`${nm(edges[i][0])}-${nm(edges[i][1])}:${Wt(edges[i])}`)))}
+  return{S,end:`Spanning tree from ${nm(start)}: ${tree.length} edges, total weight ${tot}. Edges treated as undirected.`,title:'Edges crossing the cut'}}
+function ufDemo(){const S=[],U=uf(nodes.length);
+  edges.forEach((e,i)=>{const ok=U.u(e[0],e[1]);S.push(mk(null,[],[],[],`union(${nm(e[0])}, ${nm(e[1])}): ${ok?'merged two groups.':'already in the same group.'}`,groups(U),{hot:i,comp:comps(U)}))});
+  return{S,end:`${new Set(comps(U)).size} connected group(s). Colors show the groups.`,title:'Groups (union-find sets)'}}
+const algos={bfs,dfs,dij,bf,fw,kru:kruskal,prim,uf:ufDemo};
+const list=[['bfs','BFS'],['dfs','DFS'],['dij','Dijkstra'],['bf','Bellman-Ford'],['fw','Floyd-Warshall'],['kru','Kruskal'],['prim','Prim'],['uf','Union-Find']];
+list.forEach(([k,t])=>{const b=document.createElement('button');b.className='go';b.textContent=t;b.onclick=()=>run(k);$('algs').appendChild(b)});
+async function run(kind){
+  if(running||!nodes.length)return;if(!nodes[start])start=0;if(!nodes[target])target=nodes.length-1;
+  running=true;const my=++token;view=null;render();
+  const R=algos[kind]();$('ft').textContent=R.title;
+  for(const s of R.S){if(my!==token)break;view=s;render();await sleep(1100-(+$('spd').value)*95)}
+  if(my===token&&R.S.length){
+    const last=R.S[R.S.length-1];let label=R.end,path=[],done=last.done;
+    if(!label){
+      if(R.neg)label='Negative cycle found, so shortest paths are undefined.';
+      else{const pn=R.pn||pathNodes(R.par||{},target);
+        for(let i=0;i+1<pn.length;i++)path.push(findEdge(pn[i],pn[i+1]));
+        if(!done.length)done=pn;
+        label=pn.length?`Path: ${pn.map(nm).join(' > ')}`:`${nm(target)} can't be reached from ${nm(start)}.`}}
+    view={...last,cur:null,hot:null,fr:[],done,path,label};render()}
+  running=false;
+}
+$('stop').onclick=()=>{token++;running=false};
+$('clr').onclick=()=>{closePop(false);token++;running=false;nodes=[];edges=[];start=0;target=0;view=null;$('fr').innerHTML='<span class="empty">Blank page.</span>';$('log').textContent='Click to drop nodes.';render()};
+$('wt').onchange=()=>{closePop(false);view=null;render()};
+$('dir').onchange=()=>{if(!D())edges=edges.filter((e,i)=>!edges.some((x,j)=>j<i&&x[0]===e[1]&&x[1]===e[0]));view=null;render()};
+function setTheme(t){document.documentElement.dataset.theme=t;$('th').textContent=t==='dark'?'Switch to bright':'Switch to dark'}
+$('th').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+setTheme(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+render();
+</script>
 </body>
 </html>
