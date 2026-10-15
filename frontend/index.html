@@ -385,7 +385,7 @@
 <body>
   <div class="wrap">
     <h1>Graph<b>Lab</b> playground</h1>
-    
+
     <p class="hint">Click empty paper to drop a node, or switch on Erase node and click one to remove it (its edges go
       with it). Drag from node to node to draw an edge. Click a node to set the start, shift-click to set the target. In
       weighted mode a box pops up on every new edge so you can type its own weight (negative is fine, Esc cancels the
@@ -502,7 +502,7 @@
     const treeOf = (par, done) => [...done].filter(x => par[x]).map(x => par[x].ei);
     const notesD = d => d.map((v, i) => v < Infinity ? `${nm(i)}=${v}` : null).filter(Boolean);
     const findEdge = (u, v) => edges.findIndex(e => (e[0] === u && e[1] === v) || (!D() && e[0] === v && e[1] === u));
-    function pathNodes(par, t) { const p = [t]; let c = t, g = 0; while (c !== start && par[c] && g++ < nodes.length) { c = par[c].u; p.push(c) } return c === start && p.length > 1 ? p.reverse() : [] }
+    function pathNodes(par, t) { const p = [t]; let c = t, g = 0; while (c !== start && par[c] && g++ < nodes.length) { c = par[c].u; p.push(c) } return c === start ? p.reverse() : [] }
     function uf(n) { const p = [...Array(n).keys()], f = x => p[x] === x ? x : (p[x] = f(p[x])); return { f, u: (a, b) => { a = f(a); b = f(b); if (a === b) return false; p[a] = b; return true } } }
     const comps = U => nodes.map((_, i) => U.f(i));
     const groups = U => { const m = {}; nodes.forEach((_, i) => (m[U.f(i)] = m[U.f(i)] || []).push(nm(i))); return Object.values(m).map(g => '{' + g.join('') + '}') };
@@ -559,7 +559,7 @@
       }
       const neg = d.some((r, i) => r[i] < 0), pn = [start]; let u = start, g = 0;
       while (!neg && u !== target && nx[u][target] >= 0 && g++ < n) { u = nx[u][target]; pn.push(u) }
-      return { S, neg, pn: u === target && pn.length > 1 ? pn : [], title: 'Distances from start, per stop-over' }
+      return { S, neg, pn: u === target ? pn : [], title: 'Distances from start, per stop-over' }
     }
     function kruskal() {
       const S = [], U = uf(nodes.length), tree = [], rej = []; let tot = 0;
@@ -593,8 +593,8 @@
       running = true; const my = ++token; view = null; render();
       const R = algos[kind](); $('ft').textContent = R.title;
       for (const s of R.S) { if (my !== token) break; view = s; render(); await sleep(1100 - (+$('spd').value) * 95) }
-      if (my === token && R.S.length) {
-        const last = R.S[R.S.length - 1]; let label = R.end, path = [], done = last.done;
+      if (my === token) {
+        const last = R.S.length ? R.S[R.S.length - 1] : { cur: null, done: [], fr: [], tree: [], notes: [] }; let label = R.end, path = [], done = last.done || [];
         if (!label) {
           if (R.neg) label = 'Negative cycle found, so shortest paths are undefined.';
           else {

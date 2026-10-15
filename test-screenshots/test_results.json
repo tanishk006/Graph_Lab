@@ -1,0 +1,134 @@
+{
+  "results": [
+    {
+      "algo": "BFS",
+      "scenario": "Reference Graph (A to F)",
+      "file": "bfs_reference.png",
+      "log": "Path: A > B > D > F",
+      "title": "Queue (first in, first out)",
+      "notes": []
+    },
+    {
+      "algo": "DFS",
+      "scenario": "Reference Graph (A to F)",
+      "file": "dfs_reference.png",
+      "log": "Path: A > B > C > E > D > F",
+      "title": "Stack (last in, first out)",
+      "notes": [
+        "C",
+        "D",
+        "F"
+      ]
+    },
+    {
+      "algo": "Dijkstra",
+      "scenario": "Reference Graph (A to F)",
+      "file": "dijkstra_reference.png",
+      "log": "Path: A > C > B > D > F",
+      "title": "Distance table (best known so far)",
+      "notes": [
+        "A=0",
+        "B=3",
+        "C=2",
+        "D=8",
+        "E=9",
+        "F=11"
+      ]
+    },
+    {
+      "algo": "Bellman-Ford",
+      "scenario": "Reference Graph (A to F)",
+      "file": "bellman_ford_reference.png",
+      "log": "Path: A > C > B > D > F",
+      "title": "Distances after each pass",
+      "notes": [
+        "A=0",
+        "B=3",
+        "C=2",
+        "D=8",
+        "E=9",
+        "F=11"
+      ]
+    },
+    {
+      "algo": "Floyd-Warshall",
+      "scenario": "Reference Graph (A to F)",
+      "file": "floyd_warshall_reference.png",
+      "log": "Path: A > C > B > D > F",
+      "title": "Distances from start, per stop-over",
+      "notes": [
+        "A=0",
+        "B=3",
+        "C=2",
+        "D=8",
+        "E=9",
+        "F=11"
+      ]
+    },
+    {
+      "algo": "Kruskal",
+      "scenario": "Reference Graph (A to F)",
+      "file": "kruskal_reference.png",
+      "log": "Minimum spanning forest: 5 edges, total weight 13. Edges treated as undirected.",
+      "title": "Groups (union-find sets)",
+      "notes": [
+        "{ABCDEF}"
+      ]
+    },
+    {
+      "algo": "Prim",
+      "scenario": "Reference Graph (A to F)",
+      "file": "prim_reference.png",
+      "log": "Spanning tree from A: 5 edges, total weight 13. Edges treated as undirected.",
+      "title": "Edges crossing the cut",
+      "notes": []
+    },
+    {
+      "algo": "Union-Find",
+      "scenario": "Reference Graph (A to F)",
+      "file": "union_find_reference.png",
+      "log": "1 connected group(s). Colors show the groups.",
+      "title": "Groups (union-find sets)",
+      "notes": [
+        "{ABCDEF}"
+      ]
+    },
+    {
+      "algo": "Dijkstra",
+      "scenario": "Directed Mode on Reference Graph",
+      "file": "directed_mode_dijkstra.png",
+      "log": "Path: A > C > E > F"
+    },
+    {
+      "algo": "Bellman-Ford",
+      "scenario": "Negative Edge Weight (B-C=-3)",
+      "file": "negative_weight_bellman_ford.png",
+      "log": "Negative cycle found, so shortest paths are undefined."
+    },
+    {
+      "algo": "Dijkstra",
+      "scenario": "Negative Edge Weight (Flagged)",
+      "file": "negative_weight_dijkstra.png",
+      "log": "Dijkstra needs non-negative weights."
+    },
+    {
+      "algo": "Dijkstra",
+      "scenario": "Disconnected Node G unreachable",
+      "file": "disconnected_node_dijkstra.png",
+      "log": "G can't be reached from A."
+    },
+    {
+      "algo": "Bellman-Ford",
+      "scenario": "Directed DAG Negative Weight (A->B->C cost 2)",
+      "file": "directed_negative_weight_bellman_ford.png",
+      "log": "Path: A > B > C"
+    },
+    {
+      "algo": "Dijkstra",
+      "scenario": "Start Equals Target (A to A)",
+      "file": "start_equals_target_dijkstra.png",
+      "log": "Path: A"
+    }
+  ],
+  "consoleErrors": []
+}
